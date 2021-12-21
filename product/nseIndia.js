@@ -17,7 +17,7 @@ function getTodaysHistoricData(symbol) {
     }
     let baseCallConfig = {
         method: 'get',
-        url: 'https://www.nseindia.com/get-quotes/equity?symbol=' + symbol,
+        url: 'http://www.nseindia.com/get-quotes/equity?symbol=' + symbol,
         headers: {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         }
