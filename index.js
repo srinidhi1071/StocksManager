@@ -191,12 +191,12 @@ async function updateAllStocks() {
     }
 }
 
-cron.schedule("30 21-22/1 * * *", function () {
-    console.log(`Updating Stocks through CORN job at ${new Date()}`);
-    updateAllStocks()
-});
+// cron.schedule("30 21-22/1 * * *", function () {
+//     console.log(`Updating Stocks through CORN job at ${new Date()}`);
+//     updateAllStocks()
+// });
 
-updateAllStocks()
+// updateAllStocks()
 
 app.get("/api/getStockData", (req, resp) => {
     let ticker = req.query.ticker
