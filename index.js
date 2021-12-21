@@ -3,10 +3,13 @@ const app = express()
 // const config = require("./config/config.json")
 const nseIndia = require("./product/nseIndia")
 const stocksUtil = require("./util/StocksUtil")
+const path = require('path');
 const cron = require("node-cron");
 const cors = require("cors")
 const DynamoDB = require('./db/docdb')
 app.use(cors())
+
+app.use(express.static(path.resolve(__dirname, '../stocksmanagerui/build')));
 
 async function getTodaysStockDetails(symbol) {
 

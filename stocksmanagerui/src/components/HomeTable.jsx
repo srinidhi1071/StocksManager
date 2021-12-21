@@ -46,7 +46,7 @@ function HomeTable() {
 
     useEffect(() => {
         setOpen(true)
-        fetch(`http://localhost:8080/api/getStockData?ticker=${ticker}`, {
+        fetch(`/api/getStockData?ticker=${ticker}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
