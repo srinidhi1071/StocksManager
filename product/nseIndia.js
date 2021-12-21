@@ -2,65 +2,57 @@ const { response } = require("express")
 const axiosNode = require("../util/AxiosNode")
 const excelUtil = require("../util/ExcelUtil")
 const date = require('date-and-time');
+const cheerio = require("cheerio");
 
 
 
-
-function updateTodaysHistoricData(symbol) {
+function getTodaysHistoricData(symbol) {
     let config = {
         method: 'get',
-        url: 'https://www.nseindia.com/api/historical/cm/equity?symbol=' + symbol + '&series=[%22EQ%22]',
+        url: `https://www.nseindia.com/api/historical/cm/equity?symbol=${symbol}&series=[%22EQ%22]&from=${getTodaysDate()}&to=${getTodaysDate()}`,
         headers: {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
             'referer': 'https://www.nseindia.com/get-quotes/equity?symbol=TCS',
         }
     }
+    let baseCallConfig = {
+        method: 'get',
+        url: 'https://www.nseindia.com/get-quotes/equity?symbol=' + symbol,
+        headers: {
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        }
+    }
     return new Promise((resolve, reject) => {
         try {
-            getHistoricData(config, symbol)
-                .then(response => {
-                    let sortedResponse = response.data.sort((a, b) => {
-                        return new Date(a.CH_TIMESTAMP) - new Date(b.CH_TIMESTAMP)
-                    })
-
-                    excelUtil.writeNSEHistoricDataIntoExcelFile(symbol, sortedResponse)
-                    resolve(response)
-                })
-                .catch(error => {
-                    reject(error)
-                })
-        }
-        catch (error) {
-            console.log("Error in updateTodaysHistoricData")
-        }
-    })
-
-}
-
-function getHistoricData(config, symbol) {
-    return new Promise((resolve, reject) => {
-        try {
-            let baseCallConfig = {
-                method: 'get',
-                url: 'https://www.nseindia.com/get-quotes/equity?symbol=' + symbol,
-                headers: {
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                }
-            }
             axiosNode.axiosCall(baseCallConfig)
                 .then((resp) => {
                     let respCookies = resp.headers['set-cookie']
                     config.headers.Cookie = respCookies
                     axiosNode.axiosCall(config)
                         .then(response => {
+                            console.log(`getTodaysHistoricData successfully executed`)
                             resolve(response.data)
                         })
                         .catch(error => {
-                            reject(error)
+                            if (error) {
+                                console.error(`Error in getTodaysHistoricData execution ${JSON.stringify(err)}`)
+                                reject(error)
+
+                            }
+                            else {
+                                reject({ "error": "Error in axios call" })
+                            }
                         })
                 })
                 .catch((err) => {
-                    reject(err)
+                    if (err) {
+                        console.error(`Error in getTodaysHistoricData execution ${JSON.stringify(err)}`)
+                        reject(err)
+
+                    }
+                    else {
+                        reject({ "error": "Error in axios call" })
+                    }
                 })
         }
         catch (error) {
@@ -69,8 +61,8 @@ function getHistoricData(config, symbol) {
     })
 }
 
-function updateSecurityWiseArchives(symbol) {
-    let config = {
+function getSecurityWiseArchives(symbol) {
+    let baseConfig = {
         method: 'get',
         url: 'https://www1.nseindia.com/marketinfo/sym_map/symbolCount.jsp?symbol=' + symbol,
         headers: {
@@ -80,17 +72,20 @@ function updateSecurityWiseArchives(symbol) {
     }
     return new Promise((resolve, reject) => {
         try {
-            getSWAData(config, symbol)
+            getSWAData(baseConfig, symbol)
                 .then(response => {
-                    excelUtil.writeSecurityWiseArchivesIntoExcelFile(symbol, response)
-                    resolve(response)
+                    let jsonRespone = convertHTMLintoJSON(response)
+                    console.log(`getSecurityWiseArchives successfully executed`)
+                    resolve(jsonRespone)
                 })
                 .catch(error => {
+                    console.error(`Error in getSecurityWiseArchives execution ${error}`)
                     reject(error)
                 })
         }
         catch (error) {
             console.log("Error in updateSecurityWiseArchives")
+            reject(error)
         }
     })
 
@@ -104,7 +99,7 @@ function getSWAData(baseConfig, symbol) {
                     let respCookies = resp.headers['set-cookie']
                     let innerConfig = {
                         method: 'get',
-                        url: `https://www1.nseindia.com/products/dynaContent/common/productsSymbolMapping.jsp?symbol=${symbol}&segmentLink=3&symbolCount=${resp.data}&series=EQ&dateRange=day&fromDate=&toDate=&dataType=PRICEVOLUMEDELIVERABLE`,
+                        url: `https://www1.nseindia.com/products/dynaContent/common/productsSymbolMapping.jsp?symbol=${symbol}&segmentLink=3&symbolCount=${resp.data}&series=EQ&dateRange=+&fromDate=${getTodaysDate()}&toDate=${getTodaysDate()}&dataType=PRICEVOLUMEDELIVERABLE`,
                         headers: {
                             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
                             'Referer': 'https://www1.nseindia.com/products/content/equities/equities/eq_security.htm'
@@ -113,14 +108,23 @@ function getSWAData(baseConfig, symbol) {
                     innerConfig.headers.Cookie = respCookies
                     axiosNode.axiosCall(innerConfig)
                         .then(response => {
+                            console.log(`getSWAData successfully executed`)
                             resolve(response.data)
                         })
                         .catch(error => {
+                            console.error(`Error in getSWAData execution ${error}`)
                             reject(error)
                         })
                 })
                 .catch((err) => {
-                    reject(err)
+                    if (err) {
+                        console.error(`Error in getSWAData execution ${err}`)
+                        reject(err)
+
+                    }
+                    else {
+                        reject({ "error": "Error in axios call" })
+                    }
                 })
         }
         catch (error) {
@@ -130,8 +134,8 @@ function getSWAData(baseConfig, symbol) {
 }
 
 
-function updateDerivativesInformation(symbol) {
-    let rawDate = new Date()
+function getDerivativesInformation(symbol) {
+    let rawDate = new Date(2021, 11, 16)
     let dateToday = formatDate(rawDate);
     let lastThursday = lastThursdayOfTheMonth(rawDate.getFullYear(), rawDate.getMonth() + 1)
     let lastThursdayNextMonth = lastThursdayOfTheMonth(rawDate.getFullYear(), rawDate.getMonth() + 2)
@@ -139,7 +143,6 @@ function updateDerivativesInformation(symbol) {
         lastThursday = lastThursdayOfTheMonth(rawDate.getFullYear(), rawDate.getMonth() + 2)
         lastThursdayNextMonth = lastThursdayOfTheMonth(rawDate.getFullYear(), rawDate.getMonth() + 3)
     }
-
     let config1 = {
         method: 'get',
         url: `https://www.nseindia.com/api/historical/fo/derivatives?&from=${dateToday}&to=${dateToday}&expiryDate=${lastThursday}&instrumentType=FUTSTK&symbol=${symbol}`,
@@ -157,25 +160,24 @@ function updateDerivativesInformation(symbol) {
             'referer': 'https://www.nseindia.com/get-quotes/equity?symbol=' + symbol,
         }
     }
-
-
     return new Promise((resolve, reject) => {
         try {
             getDerivativesData(config1, symbol)
                 .then(response => {
                     let derivateResponse = {}
-                    derivateResponse.responseOne = response.data
+                    derivateResponse.responseOne = response.data[0]
                     getDerivativesData(config2, symbol)
                         .then(response2 => {
-                            derivateResponse.responseTwo = response2.data
-                            excelUtil.writeDerivativesIntoExcelFile(symbol, derivateResponse)
+                            derivateResponse.responseTwo = response2.data[0]
                             resolve(derivateResponse)
                         })
                         .catch(error => {
+                            console.error(`Error in getDerivativesInformation 2 execution ${JSON.stringify(error)}`)
                             reject(error)
                         })
                 })
                 .catch(error => {
+                    console.error(`Error in getDerivativesInformation 1 execution ${JSON.stringify(error)}`)
                     reject(error)
                 })
         }
@@ -183,7 +185,6 @@ function updateDerivativesInformation(symbol) {
             console.log("Error in updateTodaysHistoricData")
         }
     })
-
 }
 
 function getDerivativesData(config, symbol) {
@@ -202,9 +203,11 @@ function getDerivativesData(config, symbol) {
                     config.headers.Cookie = respCookies
                     axiosNode.axiosCall(config)
                         .then(response => {
+                            console.log(`getDerivativesData successfully executed`)
                             resolve(response.data)
                         })
                         .catch(error => {
+                            console.error(`Error in getDerivativesData execution ${error}`)
                             reject(error)
                         })
                 })
@@ -223,6 +226,25 @@ function formatDate(rawDate) {
     return todaysDate;
 }
 
+function getTodaysDate() {
+    const now = new Date(2021, 11, 16);
+    let todaysDate = date.format(now, 'DD-MM-YYYY');
+    return todaysDate;
+}
+
+function convertHTMLintoJSON(htmlData) {
+    let $ = cheerio.load(htmlData);
+    let parsedJson = {
+        symbol: $("table tr:nth-child(2) td:nth-child(1)").text(),
+        date: date.format(new Date($("table tr:nth-child(2) td:nth-child(3)").text()), 'YYYY-MM-DD'),
+        deliverableQty: $("table tr:nth-child(2) td:nth-child(14)").text(),
+        tradedQty: $("table tr:nth-child(2) td:nth-child(15)").text()
+
+
+    }
+    return parsedJson
+}
+
 
 
 
@@ -237,7 +259,7 @@ function lastThursdayOfTheMonth(year, month) {
 }
 
 module.exports = {
-    updateTodaysHistoricData,
-    updateSecurityWiseArchives,
-    updateDerivativesInformation
+    getTodaysHistoricData,
+    getSecurityWiseArchives,
+    getDerivativesInformation
 }
