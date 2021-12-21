@@ -335,7 +335,7 @@ function insertStocksDataIntoDB(processedStocksData) {
 }
 
 function getTodaysDate() {
-    const now = new Date();
+    const now = new Date(2021, 11, 16);
     let todaysDate = date.format(now, 'YYYY-MM-DD');
     return todaysDate;
 }
