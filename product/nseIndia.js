@@ -135,7 +135,7 @@ function getSWAData(baseConfig, symbol) {
 
 
 function getDerivativesInformation(symbol) {
-    let rawDate = new Date(2021, 11, 16)
+    let rawDate = new Date()
     let dateToday = formatDate(rawDate);
     let lastThursday = lastThursdayOfTheMonth(rawDate.getFullYear(), rawDate.getMonth() + 1)
     let lastThursdayNextMonth = lastThursdayOfTheMonth(rawDate.getFullYear(), rawDate.getMonth() + 2)
@@ -227,7 +227,7 @@ function formatDate(rawDate) {
 }
 
 function getTodaysDate() {
-    const now = new Date(2021, 11, 16);
+    const now = new Date();
     let todaysDate = date.format(now, 'DD-MM-YYYY');
     return todaysDate;
 }
