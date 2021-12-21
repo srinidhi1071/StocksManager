@@ -9,7 +9,7 @@ const cheerio = require("cheerio");
 function getTodaysHistoricData(symbol) {
     let config = {
         method: 'get',
-        url: `https://www.nseindia.com/api/historical/cm/equity?symbol=${symbol}&series=[%22EQ%22]&from=${getTodaysDate()}&to=${getTodaysDate()}`,
+        url: `http://www.nseindia.com/api/historical/cm/equity?symbol=${symbol}&series=[%22EQ%22]&from=${getTodaysDate()}&to=${getTodaysDate()}`,
         headers: {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
             'referer': 'https://www.nseindia.com/get-quotes/equity?symbol=TCS',
