@@ -15,7 +15,9 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import Backdrop from '@mui/material/Backdrop';
+import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Stack from '@mui/material/Stack';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -73,6 +75,41 @@ function HomeTable() {
     const handleDropDownChange = (event) => {
         setTicker(event.target.value);
     };
+
+    const nextButtonOnClick = (event) => {
+        let nextIndex = stocksTickerNameList.indexOf(ticker) + 1
+        if (nextIndex < stocksTickerNameList.length) {
+            setTicker(stocksTickerNameList[nextIndex]);
+        }
+    }
+
+    const nextButtonOnPrev = (event) => {
+        let nextIndex = stocksTickerNameList.indexOf(ticker) - 1
+        if (nextIndex >= 0) {
+            setTicker(stocksTickerNameList[nextIndex]);
+        }
+    }
+
+    const convertToPercentage = (number) => {
+        return number * 100
+    }
+
+    const isMonthLastThursday = (date) => {
+
+        let todayDate = new Date(date);
+        let todayYear = todayDate.getFullYear()
+        let todayMonth = todayDate.getMonth()
+        var to_Date = new Date(todayYear, todayMonth + 1, 1, 12);
+        let weekday = to_Date.getDay();
+        let dayDiff = weekday > 4 ? weekday - 4 : weekday + 3;
+        to_Date.setDate(to_Date.getDate() - dayDiff);
+        if (todayDate.getDate() == to_Date.getDate()) {
+            console.log("HEREEEEEEEEEEEE")
+            return true
+        } else {
+            return false
+        }
+    }
 
     let stocksTickerNameList = ["AARTIIND", "ABBOTINDIA", "ABFRL", "ACC", "ADANIENT", "ADANIPORTS", "ALKEM", "AMARAJABAT", "AMBUJACEM", "APLLTD", "APOLLOHOSP", "APOLLOTYRE",
         "ASHOKLEY", "ASIANPAINT", "ASTRAL", "AUBANK", "AUROPHARMA", "AXISBANK", "BAJAJ-AUTO", "BAJAJFINSV", "BAJFINANCE", "BALKRISIND", "BANDHANBNK", "BANKBARODA",
@@ -134,25 +171,29 @@ function HomeTable() {
             <Box sx={{ flexGrow: 1 }}>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <h1>Stocks Manager</h1>
+                        <h1>Stocks Monitor Dashboard</h1>
                     </Grid>
                     <Grid item xs={4}>
-                        <FormControl sx={{ minWidth: 200 }}>
-                            <InputLabel id="demo-simple-select-helper-label">Ticker</InputLabel>
-                            <Select
-                                labelId="demo-simple-select-helper-label"
-                                id="demo-simple-select-helper"
-                                value={ticker}
-                                label="Ticker"
-                                onChange={handleDropDownChange}
-                            >
-                                <MenuItem value="">
-                                    <em>None</em>
-                                </MenuItem>
-                                {stocksTickerNameList.map(tickerName => (<MenuItem value={tickerName}>{tickerName}</MenuItem>))}
+                        <Stack direction="row" spacing={2}>
+                            <Button variant="contained" onClick={nextButtonOnPrev}>Previous</Button>
+                            <FormControl sx={{ minWidth: 200 }}>
+                                <InputLabel id="demo-simple-select-helper-label">Ticker</InputLabel>
+                                <Select
+                                    labelId="demo-simple-select-helper-label"
+                                    id="demo-simple-select-helper"
+                                    value={ticker}
+                                    label="Ticker"
+                                    onChange={handleDropDownChange}
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {stocksTickerNameList.map(tickerName => (<MenuItem value={tickerName}>{tickerName}</MenuItem>))}
 
-                            </Select>
-                        </FormControl>
+                                </Select>
+                            </FormControl>
+                            <Button variant="contained" onClick={nextButtonOnClick}>Next</Button>
+                        </Stack>
                     </Grid>
                     <Backdrop
                         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
@@ -160,8 +201,8 @@ function HomeTable() {
                     > <CircularProgress color="inherit" />
                     </Backdrop>
                     <Grid item xs={12}>
-                        <TableContainer >
-                            <Table aria-label="customized table">
+                        <TableContainer component={Paper} >
+                            <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
                                 <TableHead>
                                     <TableRow>
                                         <StyledTableCell>Date</StyledTableCell>
@@ -186,27 +227,27 @@ function HomeTable() {
                                 </TableHead>
                                 <TableBody>
                                     {tickerData.map((row) => (
-                                        <StyledTableRow key={row.name}>
-                                            <StyledTableCell component="th" scope="row">
+                                        <StyledTableRow style={{ backgroundColor: isMonthLastThursday(row.date) ? "#0f81d9" : "" }} key={row.name}>
+                                            <TableCell component="th" scope="row">
                                                 {row.date}
-                                            </StyledTableCell>
-                                            <StyledTableCell>{row.symbol}</StyledTableCell>
-                                            <StyledTableCell>{row.close}</StyledTableCell>
-                                            <StyledTableCell>{row.deliveryValue}</StyledTableCell>
-                                            <StyledTableCell>{row.fiveDayAvgDel}</StyledTableCell>
-                                            <StyledTableCell>{row.CummOI}</StyledTableCell>
-                                            <StyledTableCell>{row.OI}</StyledTableCell>
-                                            <StyledTableCell>{row.percentagePrice}</StyledTableCell>
-                                            <StyledTableCell>{row.percentageDelivery}</StyledTableCell>
-                                            <StyledTableCell>{row.percentageOI}</StyledTableCell>
-                                            <StyledTableCell>{row.shortCovering}</StyledTableCell>
-                                            <StyledTableCell>{row.longBuildUp}</StyledTableCell>
-                                            <StyledTableCell>{row.shortBuildUp}</StyledTableCell>
-                                            <StyledTableCell>{row.longUnwinding}</StyledTableCell>
-                                            <StyledTableCell>{row.vwap}</StyledTableCell>
-                                            <StyledTableCell>{row.high}</StyledTableCell>
-                                            <StyledTableCell>{row.low}</StyledTableCell>
-                                            <StyledTableCell>{row.close}</StyledTableCell>
+                                            </TableCell>
+                                            <TableCell>{row.symbol}</TableCell>
+                                            <TableCell>{row.close}</TableCell>
+                                            <TableCell>{row.deliveryValue.toFixed(2)}</TableCell>
+                                            <TableCell>{row.fiveDayAvgDel.toFixed(2)}</TableCell>
+                                            <TableCell>{row.CummOI}</TableCell>
+                                            <TableCell>{row.OI}</TableCell>
+                                            <TableCell style={{ backgroundColor: (row.percentagePrice * 100).toFixed(2) >= 2 ? "green" : (row.percentagePrice * 100).toFixed(2) <= -2 ? "red" : "" }}>{(row.percentagePrice * 100).toFixed(2)}%</TableCell>
+                                            <TableCell style={{ backgroundColor: (row.percentageDelivery * 100).toFixed(2) >= 120 ? "green" : "" }}>{(row.percentageDelivery * 100).toFixed(2)}%</TableCell>
+                                            <TableCell style={{ backgroundColor: (row.percentageOI * 100).toFixed(2) >= 2 ? "green" : (row.percentageOI * 100).toFixed(2) <= -2 ? "red" : "" }}>{(row.percentageOI * 100).toFixed(2)}%</TableCell>
+                                            <TableCell>{row.shortCovering}</TableCell>
+                                            <TableCell>{row.longBuildUp}</TableCell>
+                                            <TableCell>{row.shortBuildUp}</TableCell>
+                                            <TableCell>{row.longUnwinding}</TableCell>
+                                            <TableCell>{row.vwap}</TableCell>
+                                            <TableCell>{row.high}</TableCell>
+                                            <TableCell>{row.low}</TableCell>
+                                            <TableCell>{row.close}</TableCell>
                                         </StyledTableRow>
                                     ))}
                                 </TableBody>

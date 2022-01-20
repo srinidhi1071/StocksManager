@@ -1,6 +1,7 @@
 const DynamoDB = require('../db/docdb')
 const { config } = require('../config/config')
 const date = require('date-and-time');
+const configNode = require('../util/ConfigNode')
 var promiseRetry = require('promise-retry');
 
 
@@ -55,10 +56,9 @@ function processStocksData(historicData, swa, derivOne, derivTwo) {
         stocksData.premValue2 = Number(derivTwo.CALCULATED_PREMIUM_VAL)
         stocksData.openInterest2 = Number(derivTwo.FH_OPEN_INT)
         stocksData.changeInOI2 = Number(derivTwo.FH_CHANGE_IN_OI)
-
-        calculateStocksData(historicData.CH_SYMBOL)
+        stocksData.deliveryValue = (stocksData.delQty * stocksData.vwap) / 10000000
+        calculateStocksData(historicData.CH_SYMBOL, stocksData.deliveryValue)
             .then((response) => {
-                stocksData.deliveryValue = (stocksData.delQty * stocksData.vwap) / 10000000
                 stocksData.fiveDayAvgDel = response.fiveDayDelValueAverage
                 stocksData.CummOI = stocksData.openInterest1 + stocksData.openInterest2
                 stocksData.OI = stocksData.CummOI - response.previousDayCummOI
@@ -77,7 +77,7 @@ function processStocksData(historicData, swa, derivOne, derivTwo) {
     })
 }
 
-function calculateStocksData(symbol) {
+function calculateStocksData(symbol, todaysDeliveryValue) {
     return new Promise((resolve, reject) => {
         try {
 
@@ -109,7 +109,7 @@ function calculateStocksData(symbol) {
                 .then(function (resp) {
                     let calculatedStocksData = {}
                     let sortedResponse = sortDbResponseByDate(resp)
-                    calculatedStocksData.fiveDayDelValueAverage = getFiveDayAverageOfDeliveryValue(sortedResponse)
+                    calculatedStocksData.fiveDayDelValueAverage = getFiveDayAverageOfDeliveryValue(sortedResponse, todaysDeliveryValue)
                     calculatedStocksData.previousDayCummOI = getPreviousDayCummOI(sortedResponse)
                     calculatedStocksData.previousDayClose = getPreviousDayClose(sortedResponse)
                     resolve(calculatedStocksData)
@@ -123,18 +123,19 @@ function calculateStocksData(symbol) {
     })
 }
 
-function getFiveDayAverageOfDeliveryValue(sortedResponse) {
-    if (sortedResponse.Count > 0) {
+function getFiveDayAverageOfDeliveryValue(sortedResponse, todaysDeliveryValue) {
+    if (sortedResponse.length > 0) {
         let sum = 0
-        let count = sortedResponse.Count >= 5 ? 5 : sortedResponse.Count
-        for (let rowCount = 0; rowCount < count; rowCount++) {
-            if (sortedResponse.Items[rowCount].deliveryValue != undefined) {
-                sum = sum + sortedResponse.Items[rowCount].deliveryValue
+        let count = sortedResponse.length >= 5 ? 5 : sortedResponse.length
+        for (let rowCount = 0; rowCount < count - 1; rowCount++) {
+            if (sortedResponse[rowCount].deliveryValue != undefined) {
+                sum = sum + sortedResponse[rowCount].deliveryValue
             }
             else {
                 sum = sum + 0
             }
         }
+        sum = sum + todaysDeliveryValue
         let average = sum / count
         return average
     } else {
@@ -143,9 +144,9 @@ function getFiveDayAverageOfDeliveryValue(sortedResponse) {
 }
 
 function getPreviousDayCummOI(sortedResponse) {
-    if (sortedResponse.Items.length > 0) {
-        if (sortedResponse.Items[0].CummOI != undefined) {
-            return sortedResponse.Items[0].CummOI
+    if (sortedResponse.length > 0) {
+        if (sortedResponse[0].CummOI != undefined) {
+            return sortedResponse[0].CummOI
         }
         else {
             return 0
@@ -157,9 +158,9 @@ function getPreviousDayCummOI(sortedResponse) {
 }
 
 function getPreviousDayClose(sortedResponse) {
-    if (sortedResponse.Items.length > 0) {
-        if (sortedResponse.Items[0].close != undefined) {
-            return sortedResponse.Items[0].close
+    if (sortedResponse.length > 0) {
+        if (sortedResponse[0].close != undefined) {
+            return sortedResponse[0].close
         }
         else {
             return 0
@@ -172,7 +173,7 @@ function getPreviousDayClose(sortedResponse) {
 
 // function to sort the dates according to the descending order
 function sortDbResponseByDate(dbResp) {
-    dbResp.Items.sort(function (a, b) {
+    dbResp.sort(function (a, b) {
         return Number(new Date(b.date)) - Number(new Date(a.date))
     })
     return dbResp
@@ -180,7 +181,7 @@ function sortDbResponseByDate(dbResp) {
 
 // function to sort the dates according to the descending order
 function sortDbResponseByDateAscending(dbResp) {
-    dbResp.Items.sort(function (a, b) {
+    dbResp.sort(function (a, b) {
         return Number(Number(new Date(a.date) - new Date(b.date)))
     })
     return dbResp
@@ -280,14 +281,13 @@ function checkTodaysUpdateIsRequired(symbol) {
                     });
             })
                 .then(function (resp) {
-                    console.log("resp :: ", resp.Count)
-                    if (resp.Count >= 1) {
+                    console.log("resp Count :: ", resp.length)
+                    if (resp.length >= 1) {
                         resolve(false)
                     }
                     else {
                         resolve(true)
                     }
-
                 }, function (err) {
                     reject(err)
                 });
@@ -335,7 +335,7 @@ function insertStocksDataIntoDB(processedStocksData) {
 }
 
 function getTodaysDate() {
-    const now = new Date(2021, 11, 16);
+    const now = configNode.getDate();
     let todaysDate = date.format(now, 'YYYY-MM-DD');
     return todaysDate;
 }

@@ -23,28 +23,23 @@ module.exports = class DocDB {
         return Promise.resolve(this.dynamoClient)
     }
 
-    findAll(params) {
-        return new Promise((resolve, reject) => {
-            this.getDbClient()
-                .then(db => {
-                    db.scan(params, function (err, data) {
-                        if (err) {
-                            console.log(`${fileName}: findAll - Error during findAll Scan operation`);
-                            reject(err)
-                        }
-                        else {
-                            console.log(`${fileName}: findAll - Successfully completed findAll operation`);
-                            resolve(data)
-                        }
+    async findAll(params) {
 
-                    })
-
-                })
-                .catch(error => {
-                    console.log(`${fileName}: findAll - Error during findAll operation`)
-                    reject(error)
-                })
-        })
+        try {
+            let scanResults = [];
+            let items;
+            let db = await this.getDbClient()
+            do {
+                items = await db.scan(params).promise()
+                items.Items.forEach((item) => scanResults.push(item));
+                params.ExclusiveStartKey = items.LastEvaluatedKey;
+            } while (typeof items.LastEvaluatedKey !== "undefined");
+            console.log(`${fileName}: findAll - Successfully completed findAll operation`);
+            return scanResults
+        }
+        catch (error) {
+            throw error
+        }
     }
 
     findOne(params) {
@@ -72,29 +67,25 @@ module.exports = class DocDB {
         })
     }
 
-    find(params) {
-        return new Promise((resolve, reject) => {
-            this.getDbClient()
-                .then(db => {
-                    db.scan(params, function (err, data) {
-                        if (err) {
-                            console.log(`${fileName}: find - Error during find get operation`);
-                            reject(err)
-                        }
-                        else {
-                            console.log(`${fileName}: find - Successfully completed find operation`);
-                            resolve(data)
-                        }
+    async find(params) {
 
-                    })
+        try {
+            let scanResults = [];
+            let items;
+            let db = await this.getDbClient()
+            do {
+                items = await db.scan(params).promise()
+                items.Items.forEach((item) => scanResults.push(item));
+                params.ExclusiveStartKey = items.LastEvaluatedKey;
+            } while (typeof items.LastEvaluatedKey !== "undefined");
+            console.log(`${fileName}: find - Successfully completed find operation`);
+            return scanResults;
 
-                })
-                .catch(error => {
-                    console.log(`${fileName}: findOne - Error during findOne operation`)
-                    reject(error)
-                })
-
-        })
+        }
+        catch (error) {
+            console.log(`${fileName}: find - Error during find get operation`)
+            throw error
+        }
     }
 
     insertOne(params) {
@@ -120,29 +111,4 @@ module.exports = class DocDB {
         })
     }
 
-
-
-    // let fetchOneByKey = function () {
-    //     var params = {
-    //         TableName: "stock_manager_dev",
-    //         FilterExpression: "#symb = :sym",
-    //         ExpressionAttributeNames: {
-    //             "#symb": "symbol",
-    //         },
-    //         ExpressionAttributeValues: {
-    //             ":sym": "TCS"
-    //         }
-    //     };
-    //     docClient.scan(params, function (err, data) {
-    //         if (err) {
-    //             console.log("users::fetchOneByKey::error - " + JSON.stringify(err, null, 2));
-    //         }
-    //         else {
-    //             console.log("users::fetchOneByKey::success - " + JSON.stringify(data, null, 2));
-    //             return (data)
-    //         }
-
-    //     })
-    // }
 }
-
