@@ -104,7 +104,6 @@ function HomeTable() {
         let dayDiff = weekday > 4 ? weekday - 4 : weekday + 3;
         to_Date.setDate(to_Date.getDate() - dayDiff);
         if (todayDate.getDate() == to_Date.getDate()) {
-            console.log("HEREEEEEEEEEEEE")
             return true
         } else {
             return false
@@ -206,7 +205,7 @@ function HomeTable() {
                                 <TableHead>
                                     <TableRow>
                                         <StyledTableCell>Date</StyledTableCell>
-                                        <StyledTableCell>Symbol</StyledTableCell>
+                                        {/* <StyledTableCell>Symbol</StyledTableCell> */}
                                         <StyledTableCell>Price</StyledTableCell>
                                         <StyledTableCell>Delivery Value</StyledTableCell>
                                         <StyledTableCell>5 Day Avg Del</StyledTableCell>
@@ -231,23 +230,23 @@ function HomeTable() {
                                             <TableCell component="th" scope="row">
                                                 {row.date}
                                             </TableCell>
-                                            <TableCell>{row.symbol}</TableCell>
+                                            {/* <TableCell>{row.symbol}</TableCell> */}
                                             <TableCell>{row.close}</TableCell>
                                             <TableCell>{row.deliveryValue.toFixed(2)}</TableCell>
                                             <TableCell>{row.fiveDayAvgDel.toFixed(2)}</TableCell>
                                             <TableCell>{row.CummOI}</TableCell>
                                             <TableCell>{row.OI}</TableCell>
-                                            <TableCell style={{ backgroundColor: (row.percentagePrice * 100).toFixed(2) >= 2 ? "green" : (row.percentagePrice * 100).toFixed(2) <= -2 ? "red" : "" }}>{(row.percentagePrice * 100).toFixed(2)}%</TableCell>
-                                            <TableCell style={{ backgroundColor: (row.percentageDelivery * 100).toFixed(2) >= 120 ? "green" : "" }}>{(row.percentageDelivery * 100).toFixed(2)}%</TableCell>
-                                            <TableCell style={{ backgroundColor: (row.percentageOI * 100).toFixed(2) >= 2 ? "green" : (row.percentageOI * 100).toFixed(2) <= -2 ? "red" : "" }}>{(row.percentageOI * 100).toFixed(2)}%</TableCell>
-                                            <TableCell>{row.shortCovering}</TableCell>
-                                            <TableCell>{row.longBuildUp}</TableCell>
-                                            <TableCell>{row.shortBuildUp}</TableCell>
-                                            <TableCell>{row.longUnwinding}</TableCell>
-                                            <TableCell>{row.vwap}</TableCell>
-                                            <TableCell>{row.high}</TableCell>
-                                            <TableCell>{row.low}</TableCell>
-                                            <TableCell>{row.close}</TableCell>
+                                            <TableCell style={{ backgroundColor: (row.percentagePrice * 100).toFixed(2) >= 2 ? "#5fd970" : (row.percentagePrice * 100).toFixed(2) <= -2 ? "#fc6a6a" : "" }}>{(row.percentagePrice * 100).toFixed(2)}%</TableCell>
+                                            <TableCell style={{ backgroundColor: (row.percentageDelivery * 100).toFixed(2) >= 120 ? "#5fd970" : "" }}>{(row.percentageDelivery * 100).toFixed(2)}%</TableCell>
+                                            <TableCell style={{ backgroundColor: (row.percentageOI * 100).toFixed(2) >= 2 ? "#5fd970" : (row.percentageOI * 100).toFixed(2) <= -2 ? "#fc6a6a" : "" }}>{(row.percentageOI * 100).toFixed(2)}%</TableCell>
+                                            <TableCell>{row.shortCovering.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{row.longBuildUp.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{row.shortBuildUp.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{row.longUnwinding.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{row.vwap.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{row.high.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{row.low.toLocaleString('en-IN')}</TableCell>
+                                            <TableCell>{row.close.toLocaleString('en-IN')}</TableCell>
                                         </StyledTableRow>
                                     ))}
                                 </TableBody>

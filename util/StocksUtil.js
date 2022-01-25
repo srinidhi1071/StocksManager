@@ -182,7 +182,7 @@ function sortDbResponseByDate(dbResp) {
 // function to sort the dates according to the descending order
 function sortDbResponseByDateAscending(dbResp) {
     dbResp.sort(function (a, b) {
-        return Number(Number(new Date(a.date) - new Date(b.date)))
+        return Number(Number(new Date(b.date) - new Date(a.date)))
     })
     return dbResp
 }
